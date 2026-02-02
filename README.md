@@ -307,24 +307,301 @@ curl -H "Authorization: Bearer seu_token" \
 3. Criar uma variável de ambiente: `{{token}}`
 4. Adicionar ao header: `Authorization: Bearer {{token}}`
 
-## 📋 Roadmap
+# Frontend
 
-- [ ] Implementar BCryptPasswordEncoder
-- [ ] Adicionar testes unitários
-- [ ] Implementar paginação
-- [ ] Adicionar filtros avançados
-- [ ] Implementar auditoria
-- [ ] Cache com Redis
-- [ ] Métodos de pagamento
+Sistema web moderno para gerenciamento de clientes com autenticação segura, CRUD completo e integração com API de CEP.
 
-## 📄 Licença
+## 🎯 Funcionalidades
 
-Este projeto é de uso educacional.
+- ✅ **Autenticação Segura**
+  - Login com validação de credenciais
+  - Sistema de Refresh Token para renovação automática de acesso
+  - Tokens armazenados de forma segura
+  - Redirecionamento automático em caso de expiração
 
-## 👥 Autores
+- ✅ **Gestão de Clientes (CRUD)**
+  - Criar novo cliente
+  - Listar clientes cadastrados em tabela interativa
+  - Editar informações de cliente
+  - Deletar cliente com confirmação
 
-Desenvolvido para o projeto Pinhais.
+- ✅ **Busca de CEP Automática**
+  - Campo CEP que busca dados da API ViaCEP
+  - Auto-preenchimento de endereço
+  - Debounce de 500ms para otimização
+  - Validação de CEP em tempo real
 
----
+- ✅ **Interface Responsiva**
+  - Design mobile-first
+  - Tailwind CSS para estilização
+  - Componentes reutilizáveis
+  - Notificações em tempo real (Sonner)
 
-**Última atualização**: Fevereiro de 2026
+- ✅ **Proteção de Rotas**
+  - Rotas privadas apenas para usuários autenticados
+  - Rota pública de login bloqueada para usuários logados
+  - Logout com limpeza completa de tokens
+
+## 🛠️ Tecnologias Utilizadas
+
+### Frontend
+- **React 19** - Biblioteca para UI
+- **TypeScript** - Tipagem estática
+- **Vite** - Build tool e dev server
+- **Tailwind CSS** - Framework CSS utility-first
+- **React Router** - Roteamento de páginas
+- **React Hook Form** - Gerenciamento de formulários
+- **Zod** - Validação de schemas
+- **Axios** - Client HTTP
+- **Sonner** - Notificações toast
+- **Lucide React** - Ícones
+- **TanStack React Table** - Tabelas avançadas
+
+### Backend (Esperado)
+- Node.js/Express ou similar
+- JWT para autenticação
+- Refresh tokens
+- Endpoints CRUD de clientes
+
+## 📋 Pré-requisitos
+
+- Node.js 18+ instalado
+- npm ou yarn
+- Backend rodando em `http://localhost:8080/api`
+
+## 🚀 Instalação
+
+1. **Clone o repositório**
+```bash
+git clone <repositorio>
+cd pinhais-web
+```
+
+2. **Instale as dependências**
+```bash
+npm install
+```
+
+3. **Configure o Tailwind CSS**
+```bash
+npm i tailwindcss @tailwindcss/vite
+```
+
+4. **Instale as dependências adicionais**
+```bash
+npm i sonner axios react-router-dom react-hook-form zod @hookform/resolvers lucide-react
+```
+
+## ⚙️ Configuração
+
+### Variáveis de Ambiente
+
+Crie um arquivo `.env.local` na raiz do projeto (se necessário):
+
+```env
+VITE_API_URL=http://localhost:8080/api
+```
+
+### API Base URL
+
+A URL da API está configurada em `src/services/api.ts`:
+
+```typescript
+const api = axios.create({
+  baseURL: "http://localhost:8080/api",
+});
+```
+
+Altere conforme necessário para seu ambiente.
+
+## 📖 Como Executar
+
+### Desenvolvimento
+
+```bash
+npm run dev
+```
+
+Acesse `http://localhost:5173` no navegador
+
+### Build para Produção
+
+```bash
+npm run build
+```
+
+### Preview da Build
+
+```bash
+npm run preview
+```
+
+### Lint
+
+```bash
+npm run lint
+```
+
+## 📁 Estrutura do Projeto
+
+```
+src/
+├── components/
+│   ├── DataTable.tsx              # Tabela reutilizável
+│   ├── DialogFormWrapper.tsx      # Wrapper para diálogos de formulário
+│   ├── FormCliente.tsx            # Formulário de cadastro
+│   ├── FormClienteEdit.tsx        # Formulário de edição
+│   ├── FormLogin.tsx              # Formulário de login
+│   ├── Header.tsx                 # Cabeçalho com botão logout
+│   ├── Input.tsx                  # Componente de input customizado
+│   └── ui/                        # Componentes base (Shadcn UI)
+├── pages/
+│   ├── Login.tsx                  # Página de login
+│   └── Cliente.tsx                # Página de gestão de clientes
+├── routes/
+│   ├── PrivateRoute.tsx           # Rota protegida para usuários autenticados
+│   └── PublicRoute.tsx            # Rota protegida para não autenticados
+├── schemas/
+│   ├── login.schema.ts            # Validação de login
+│   └── cliente.schema.ts          # Validação de cliente
+├── services/
+│   ├── api.ts                     # Cliente HTTP com interceptadores
+│   └── cepService.ts              # Serviço para busca de CEP
+├── types/
+│   └── types.ts                   # Tipos TypeScript compartilhados
+├── utils/
+│   ├── columns.tsx                # Definição de colunas da tabela
+│   ├── tokenManager.ts            # Gerenciamento de tokens
+│   ├── apiError.ts                # Tratamento de erros de API
+│   └── cssRewritingPlugin.ts      # Plugin de CSS
+├── App.tsx                        # Componente raiz com rotas
+├── main.tsx                       # Entrada da aplicação
+└── index.css                      # Estilos globais
+```
+
+## 🔐 Autenticação e Segurança
+
+### Fluxo de Login
+
+1. Usuário insere credenciais
+2. POST `/auth/login` com username e senha
+3. Backend retorna `token` e `refreshToken`
+4. Tokens armazenados no localStorage
+5. Redirecionamento para `/cliente`
+
+### Refresh Token
+
+O sistema implementa refresh automático:
+
+1. Requisição retorna 401 (token expirado)
+2. Interceptor tenta renovar com `refreshToken`
+3. Se bem-sucedido, requisição é retentada com novo token
+4. Se falhar, usuário é desconectado e redirecionado para login
+
+### Proteção de Rotas
+
+- **PrivateRoute**: Apenas usuários autenticados
+- **PublicRoute**: Apenas usuários não autenticados (login)
+
+## 📡 API Endpoints Esperados
+
+### Autenticação
+```
+POST /auth/login
+  Body: { username, senha }
+  Response: { token, refreshToken }
+
+POST /auth/refresh
+  Body: { refreshToken }
+  Response: { token, refreshToken }
+```
+
+### Clientes
+```
+GET /clientes
+  Headers: Authorization: Bearer <token>
+  Response: Client[]
+
+POST /clientes
+  Headers: Authorization: Bearer <token>
+  Body: { nome, cpf, endereco }
+  Response: { id, nome, cpf, endereco }
+
+PUT /clientes/:id
+  Headers: Authorization: Bearer <token>
+  Body: { nome, cpf, endereco }
+  Response: { id, nome, cpf, endereco }
+
+DELETE /clientes/:id
+  Headers: Authorization: Bearer <token>
+  Response: { success: true }
+```
+
+## 📝 Validações
+
+### Cliente
+- **Nome**: Mínimo 3 caracteres
+- **CPF**: Formato XXX.XXX.XXX-XX
+- **CEP**: Formato XXXXX-XXX (buscado automaticamente na ViaCEP)
+- **Endereço**: Mínimo 5 caracteres, preenchido automaticamente via CEP
+
+### Login
+- **Username**: Obrigatório
+- **Senha**: Obrigatório
+
+## 🔧 Serviços Externos
+
+### ViaCEP
+API pública para busca de CEP brasileiro
+
+```
+GET https://viacep.com.br/ws/{cep}/json/
+```
+
+Retorna informações de logradouro, bairro, cidade, estado, etc.
+
+## 🎨 Componentes Principais
+
+### DataTable
+Tabela interativa com suporte a:
+- Seleção de linhas
+- Tipos de coluna: normal, badge, object, action
+- Carregamento
+- Paginação
+
+### DialogFormWrapper
+Wrapper para formulários em diálogo:
+- Cabeçalho e rodapé customizáveis
+- Botão submit no rodapé
+- Estado de carregamento
+
+### Input
+Componente de input reutilizável:
+- Validação com react-hook-form
+- Toggle para visualização de senha
+- Estados disabled e error
+- Labels com indicação de obrigatoriedade
+
+## 📱 Design Responsivo
+
+- **Mobile**: Layouts empilhados, botões maiores
+- **Tablet**: Ajustes de padding e fonts
+- **Desktop**: Layout completo com múltiplas colunas
+
+## 🐛 Tratamento de Erros
+
+- Erros de API mostrados via toast (Sonner)
+- Validação em tempo real de formulários
+- Mensagens amigáveis para o usuário
+- Logs em console para debug
+
+## 📦 Scripts NPM
+
+```bash
+npm run dev       # Inicia servidor de desenvolvimento
+npm run build     # Faz build para produção
+npm run preview   # Visualiza build de produção
+npm run lint      # Executa linter
+```
+
+
